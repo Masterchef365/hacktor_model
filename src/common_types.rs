@@ -4,8 +4,9 @@ use serde::{Serialize, Deserialize};
 /// Unique ID representing a specific System
 pub type TopicID = u64;
 
+/// Message for SystemManager, subscribes this system to a topic
 #[derive(Serialize, Deserialize)]
-pub struct TopicSub(pub TopicID);
+pub struct TopicSub(pub TopicID); // TODO: Add unsubscribe?
 
 /// Untyped Message for System-System interchange
 #[derive(Clone, Debug)]
@@ -16,6 +17,7 @@ pub struct Message {
 }
 
 impl Message {
+    /// Construct a new Message with the specified data and destination.
     pub fn new<T: HasTypeID + Serialize>(
         topic: TopicID,
         data: T,

@@ -12,14 +12,17 @@ struct ManagedSystem {
 }
 
 impl SystemManager {
+    /// The system manager's topic id, for sending TopicSub() messages to it
     pub const TOPIC_ID: TopicID = 0xe2cb565b9147616c;
 
+    /// Create a new SystemManager
     pub fn new() -> Self {
         Self {
             managed_systems: Vec::new(),
         }
     }
 
+    /// Add a new system to the internal pool
     pub fn add_system(&mut self, system: Box<dyn System>) {
         self.managed_systems.push(ManagedSystem {
             system,
@@ -28,6 +31,7 @@ impl SystemManager {
         });
     }
 
+    /// Perform a single-threaded step for all systems
     pub fn step(&mut self) {
         let mut global_outbox: Vec<Message> = Vec::new();
 
@@ -56,6 +60,7 @@ impl SystemManager {
         }
     }
 
+    /// Distribute a message to all systems subscribed to its topic
     pub fn distribute_message(&mut self, message: &Message) {
         for managed in self.managed_systems.iter_mut() {
             if managed.subscriptions.contains(&message.topic) {
