@@ -17,16 +17,22 @@ pub trait HasTypeID {
     const TYPE_ID: DataTypeID;
 }
 
-// TODO: Use stdlib traits for these...
-impl AnonymousData {
-    pub fn into_type<T: HasTypeID + Serialize>(object: &T) -> Result<Self, bincode::Error> {
-        Ok(Self {
+pub trait IntoAnon {
+    fn into_anon(&self) -> Result<AnonymousData, bincode::Error>;
+}
+
+// TODO: Use stdlib traits for these?
+impl<T: HasTypeID + Serialize> IntoAnon for T {
+    fn into_anon(&self) -> Result<AnonymousData, bincode::Error> {
+        Ok(AnonymousData {
             type_id: T::TYPE_ID,
-            data: bincode::serialize(&object)?.into_boxed_slice(),
+            data: bincode::serialize(self)?.into_boxed_slice(),
         })
     }
+}
 
-    pub fn as_type<'a, T: HasTypeID + Deserialize<'a>>(&'a self) -> Result<T, AnonError> {
+impl AnonymousData {
+    pub fn deserialize<'a, T: HasTypeID + Deserialize<'a>>(&'a self) -> Result<T, AnonError> {
         if T::TYPE_ID != self.type_id {
             return Err(AnonError::TypeIDMismatch {
                 expected: T::TYPE_ID,

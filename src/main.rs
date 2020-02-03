@@ -1,5 +1,5 @@
-use hacktor::log_system::{LogMessage, LogSystem};
-use hacktor::{AnonymousData, Message, SystemManager};
+use hacktor::log_system::LogSystem;
+use hacktor::{IntoAnon, Message, SystemManager};
 
 // TODO:
 // Implement the ECS as a system of its own.
@@ -17,10 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     manager.add_system(Box::new(LogSystem));
     manager.insert_msg(&Message {
         transceivers: vec![0xdc23e00f290c8fdb],
-        data: AnonymousData::into_type(&LogMessage {
-            text: "Fuck yeah bitch".to_string(),
-        })
-        .unwrap(),
+        data: "Fuck yeah bitch".into_anon()?,
     });
     manager.step();
     Ok(())
