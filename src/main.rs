@@ -1,7 +1,5 @@
-use hacktor::anonymous::AnonymousData;
-use hacktor::common_types::Message;
 use hacktor::log_system::{LogMessage, LogSystem};
-use hacktor::system_manager::SystemManager;
+use hacktor::{AnonymousData, Message, SystemManager};
 
 // TODO:
 // Implement the ECS as a system of its own.

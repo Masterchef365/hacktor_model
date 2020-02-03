@@ -2,11 +2,13 @@ use crate::anonymous::{DataTypeID, HasTypeID};
 use crate::common_types::{Message, System, SystemID};
 use serde::{Deserialize, Serialize};
 
+/// A log message
 #[derive(Serialize, Deserialize)]
 pub struct LogMessage {
     pub text: String,
 }
 
+/// Log message presentation System
 pub struct LogSystem;
 
 impl System for LogSystem {

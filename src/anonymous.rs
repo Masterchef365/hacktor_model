@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display};
+
+/// Unique data type ID for dynamic typing using AnonymousData
 pub type DataTypeID = u64;
 
 /// Anonymous data type, can be nested.
