@@ -7,18 +7,18 @@ pub type EntityID = u32;
 pub type ComponentID = u32;
 type ECData = HashMap<EntityID, HashMap<ComponentID, AnonymousData>>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ECDatabaseQuery {
     entities: Vec<EntityID>,
     components: Vec<ComponentID>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ECDatabaseAvailable {
     results: Vec<(EntityID, Vec<ComponentID>)>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ECDatabaseMessage {
     QueryAvailable,
     Read(ECDatabaseQuery),
@@ -30,13 +30,29 @@ pub struct ECDatabase {
     pub data: ECData,
 }
 
+impl ECDatabase {
+    pub const SYSTEM_ID: SystemID = 0xbdbe41313b4c4600;
+    pub fn new() -> Box<Self> {
+        Box::new(Default::default())
+    }
+}
+
 impl System for ECDatabase {
     fn get_system_id(&self) -> SystemID {
-        0xbdbe41313b4c4600
+        Self::SYSTEM_ID
     }
 
     fn run(&mut self, inbox: &[Message]) -> Box<[Message]> {
-        inbox.to_vec().into_boxed_slice()
+        let mut outbox = Vec::new();
+        for message in inbox {
+            if let Ok(ec_database_msg) = message.data.deserialize::<ECDatabaseMessage>() {
+                use crate::log_system::LogSystem;
+                outbox.push(
+                    Message::new(LogSystem::SYSTEM_ID, format!("{:?}", ec_database_msg)).unwrap(),
+                );
+            }
+        }
+        outbox.into_boxed_slice()
     }
 }
 

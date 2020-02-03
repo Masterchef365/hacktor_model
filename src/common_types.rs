@@ -5,17 +5,17 @@ use serde::Serialize;
 #[derive(Clone, Debug)]
 pub struct Message {
     /// Receivers or transmitter for this message
-    pub transceivers: Vec<SystemID>,
+    pub transceiver: SystemID,
     pub data: AnonymousData,
 }
 
 impl Message {
     pub fn new<T: HasTypeID + Serialize>(
-        receivers: Vec<SystemID>,
+        receiver: SystemID,
         data: T,
     ) -> Result<Self, bincode::Error> {
         Ok(Self {
-            transceivers: receivers,
+            transceiver: receiver,
             data: data.into_anon()?,
         })
     }

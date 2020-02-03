@@ -18,13 +18,12 @@ impl SystemManager {
 
     /// Insert a message for distribution
     pub fn insert_msg(&mut self, msg: &Message) {
-        Self::distribute_msg(msg, &mut self.last_step_data);
+        Self::push_msg(msg, &mut self.last_step_data);
     }
 
     /// Perform execution on all systems and distribute messages
     pub fn step(&mut self) {
-        let mut destinations: StepPersist =
-            self.systems.keys().map(|key| (*key, Vec::new())).collect();
+        let mut destinations: StepPersist = Default::default();
 
         for (id, system) in self.systems.iter_mut() {
             let last_data = match self.last_step_data.get(id) {
@@ -33,19 +32,17 @@ impl SystemManager {
             };
 
             for msg in system.run(last_data).iter() {
-                Self::distribute_msg(msg, &mut destinations);
+                Self::push_msg(msg, &mut destinations);
             }
         }
 
-        self.last_step_data = destinations;
+        std::mem::swap(&mut self.last_step_data, &mut destinations);
     }
 
-    fn distribute_msg(msg: &Message, persist: &mut StepPersist) {
-        for msg_dest in &msg.transceivers {
-            persist
-                .entry(*msg_dest)
-                .or_insert(Vec::new())
-                .push(msg.clone());
-        }
+    fn push_msg(msg: &Message, persist: &mut StepPersist) {
+        persist
+            .entry(msg.transceiver)
+            .or_insert(Vec::new())
+            .push(msg.clone());
     }
 }

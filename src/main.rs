@@ -1,5 +1,6 @@
 use hacktor::log_system::LogSystem;
-use hacktor::{IntoAnon, Message, SystemManager};
+use hacktor::ec_database::{ECDatabase, ECDatabaseMessage};
+use hacktor::{Message, SystemManager};
 
 // TODO:
 // Implement the ECS as a system of its own.
@@ -15,7 +16,10 @@ use hacktor::{IntoAnon, Message, SystemManager};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut manager = SystemManager::default();
     manager.add_system(LogSystem::new());
-    manager.insert_msg(&Message::new(vec![LogSystem::SYSTEM_ID], "Fuck yeah bitch")?);
+    manager.add_system(ECDatabase::new());
+    manager.insert_msg(&Message::new(LogSystem::SYSTEM_ID, "Fuck yeah bitch".to_string())?);
+    manager.insert_msg(&Message::new(ECDatabase::SYSTEM_ID, ECDatabaseMessage::QueryAvailable)?);
+    manager.step();
     manager.step();
     Ok(())
 }

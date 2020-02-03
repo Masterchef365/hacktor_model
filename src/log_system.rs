@@ -17,8 +17,8 @@ impl System for LogSystem {
 
     fn run(&mut self, inbox: &[Message]) -> Box<[Message]> {
         for msg in inbox {
-            if let Ok(log_msg) = msg.data.deserialize::<&str>() {
-                println!("[LOG] ({:x?}): {}", msg.transceivers[0], log_msg);
+            if let Ok(log_msg) = msg.data.deserialize::<String>() {
+                println!("[LOG] ({:x?}): {}", msg.transceiver, log_msg);
             }
         }
         Box::new([])
