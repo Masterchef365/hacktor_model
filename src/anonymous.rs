@@ -17,11 +17,13 @@ pub trait HasTypeID {
     const TYPE_ID: DataTypeID;
 }
 
+/// Auto-impl'd trait for types that can be converted into AnonymousData. Waiting on the 
+/// `specialization` language feature to be able to implement it through `std::convert::TryFrom`.
 pub trait IntoAnon {
+    /// Upconvert and serialize this into the anonymous type.
     fn into_anon(&self) -> Result<AnonymousData, bincode::Error>;
 }
 
-// TODO: Use stdlib traits for these?
 impl<T: HasTypeID + Serialize> IntoAnon for T {
     fn into_anon(&self) -> Result<AnonymousData, bincode::Error> {
         Ok(AnonymousData {
@@ -32,6 +34,7 @@ impl<T: HasTypeID + Serialize> IntoAnon for T {
 }
 
 impl AnonymousData {
+    /// Attempt to downconvert AnonymousData into the specified type
     pub fn deserialize<'a, T: HasTypeID + Deserialize<'a>>(&'a self) -> Result<T, AnonError> {
         if T::TYPE_ID != self.type_id {
             return Err(AnonError::TypeIDMismatch {
@@ -43,11 +46,12 @@ impl AnonymousData {
     }
 }
 
+// For nesting anonymous data...
 impl HasTypeID for AnonymousData {
     const TYPE_ID: DataTypeID = 0xfc9463e33a98c637;
 }
 
-/// Error encountered during anonymous conversion
+/// Error encountered during anonymous downconversion
 #[derive(Debug)]
 pub enum AnonError {
     Bincode(bincode::Error),

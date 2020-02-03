@@ -14,11 +14,8 @@ use hacktor::{IntoAnon, Message, SystemManager};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut manager = SystemManager::default();
-    manager.add_system(Box::new(LogSystem));
-    manager.insert_msg(&Message {
-        transceivers: vec![0xdc23e00f290c8fdb],
-        data: "Fuck yeah bitch".into_anon()?,
-    });
+    manager.add_system(LogSystem::new());
+    manager.insert_msg(&Message::new(vec![LogSystem::SYSTEM_ID], "Fuck yeah bitch")?);
     manager.step();
     Ok(())
 }

@@ -1,4 +1,5 @@
-use crate::anonymous::AnonymousData;
+use crate::anonymous::{AnonymousData, HasTypeID, IntoAnon};
+use serde::Serialize;
 
 /// Untyped Message for System-System interchange
 #[derive(Clone, Debug)]
@@ -6,6 +7,18 @@ pub struct Message {
     /// Receivers or transmitter for this message
     pub transceivers: Vec<SystemID>,
     pub data: AnonymousData,
+}
+
+impl Message {
+    pub fn new<T: HasTypeID + Serialize>(
+        receivers: Vec<SystemID>,
+        data: T,
+    ) -> Result<Self, bincode::Error> {
+        Ok(Self {
+            transceivers: receivers,
+            data: data.into_anon()?,
+        })
+    }
 }
 
 /// Unique ID representing a specific System
