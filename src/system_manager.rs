@@ -1,48 +1,73 @@
-use crate::common_types::{Message, System, SystemID};
-use std::collections::HashMap;
+use crate::common_types::{Message, System, TopicID, TopicSub};
+use std::collections::HashSet;
 
-type StepPersist = HashMap<SystemID, Vec<Message>>;
-
-/// Manages System execution and message distribution
-#[derive(Default)]
 pub struct SystemManager {
-    systems: HashMap<SystemID, Box<dyn System>>,
-    last_step_data: StepPersist,
+    managed_systems: Vec<ManagedSystem>, //TODO: Use slotmap here? (Might wanna remove systems during runtime)
+}
+
+struct ManagedSystem {
+    pub system: Box<dyn System>,
+    pub subscriptions: HashSet<TopicID>,
+    pub inbox_buffer: Vec<Message>,
 }
 
 impl SystemManager {
-    /// Add a system to the system manager
+    pub const TOPIC_ID: TopicID = 0xe2cb565b9147616c;
+
+    pub fn new() -> Self {
+        Self {
+            managed_systems: Vec::new(),
+        }
+    }
+
     pub fn add_system(&mut self, system: Box<dyn System>) {
-        self.systems.insert(system.get_system_id(), system);
+        self.managed_systems.push(ManagedSystem {
+            system,
+            subscriptions: HashSet::new(),
+            inbox_buffer: Vec::new(),
+        });
     }
 
-    /// Insert a message for distribution
-    pub fn insert_msg(&mut self, msg: &Message) {
-        Self::push_msg(msg, &mut self.last_step_data);
-    }
-
-    /// Perform execution on all systems and distribute messages
     pub fn step(&mut self) {
-        let mut destinations: StepPersist = Default::default();
+        let mut global_outbox: Vec<Message> = Vec::new();
 
-        for (id, system) in self.systems.iter_mut() {
-            let last_data = match self.last_step_data.get(id) {
-                Some(d) => d,
-                None => continue,
-            };
+        // Run systems, collect outbox messages
+        for managed in self.managed_systems.iter_mut() {
+            // Run the system
+            let outbox = managed.system.run(&managed.inbox_buffer);
 
-            for msg in system.run(last_data).iter() {
-                Self::push_msg(msg, &mut destinations);
+            // Check for messages to the system manager itself
+            for message in outbox.iter() {
+                if message.topic == Self::TOPIC_ID {
+                    if let Ok(TopicSub(topic_sub)) = message.data.as_type() {
+                        managed.subscriptions.insert(topic_sub);
+                    }
+                }
             }
+
+            // Push this system's outbox to the global outbox
+            global_outbox.extend(outbox.to_vec().drain(..));
+            managed.inbox_buffer.clear();
         }
 
-        std::mem::swap(&mut self.last_step_data, &mut destinations);
+        // Redistribute messages
+        for message in global_outbox {
+            self.distribute_message(&message);
+        }
     }
 
-    fn push_msg(msg: &Message, persist: &mut StepPersist) {
-        persist
-            .entry(msg.transceiver)
-            .or_insert(Vec::new())
-            .push(msg.clone());
+    pub fn distribute_message(&mut self, message: &Message) {
+        for managed in self.managed_systems.iter_mut() {
+            if managed.subscriptions.contains(&message.topic) {
+                managed.inbox_buffer.push(message.clone());
+            }
+        }
+    }
+}
+
+// TODO: This feels a little gross?
+impl Message {
+    pub fn topic_sub(topic_id: TopicID) -> Self {
+        Self::new(SystemManager::TOPIC_ID, TopicSub(topic_id)).unwrap()
     }
 }

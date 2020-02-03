@@ -1,34 +1,38 @@
 use crate::anonymous::{AnonymousData, HasTypeID, IntoAnon};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
+
+/// Unique ID representing a specific System
+pub type TopicID = u64;
+
+#[derive(Serialize, Deserialize)]
+pub struct TopicSub(pub TopicID);
 
 /// Untyped Message for System-System interchange
 #[derive(Clone, Debug)]
 pub struct Message {
     /// Receivers or transmitter for this message
-    pub transceiver: SystemID,
+    pub topic: TopicID,
     pub data: AnonymousData,
 }
 
 impl Message {
     pub fn new<T: HasTypeID + Serialize>(
-        receiver: SystemID,
+        topic: TopicID,
         data: T,
     ) -> Result<Self, bincode::Error> {
         Ok(Self {
-            transceiver: receiver,
+            topic,
             data: data.into_anon()?,
         })
     }
 }
 
-/// Unique ID representing a specific System
-pub type SystemID = u64;
-
 /// Traits implemented by a System
 pub trait System {
-    /// Get this system's ID
-    fn get_system_id(&self) -> SystemID;
-
     /// Run this system
     fn run(&mut self, inbox: &[Message]) -> Box<[Message]>;
+}
+
+impl HasTypeID for TopicSub {
+    const TYPE_ID: TopicID = 0xd3810409802fae6f;
 }

@@ -35,7 +35,7 @@ impl<T: HasTypeID + Serialize> IntoAnon for T {
 
 impl AnonymousData {
     /// Attempt to downconvert AnonymousData into the specified type
-    pub fn deserialize<'a, T: HasTypeID + Deserialize<'a>>(&'a self) -> Result<T, AnonError> {
+    pub fn as_type<'a, T: HasTypeID + Deserialize<'a>>(&'a self) -> Result<T, AnonError> {
         if T::TYPE_ID != self.type_id {
             return Err(AnonError::TypeIDMismatch {
                 expected: T::TYPE_ID,

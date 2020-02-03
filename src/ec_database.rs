@@ -1,5 +1,5 @@
 use crate::anonymous::*;
-use crate::common_types::{Message, System, SystemID};
+use crate::common_types::{Message, System, TopicID};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -28,30 +28,34 @@ pub enum ECDatabaseMessage {
 #[derive(Default, Clone, Debug)]
 pub struct ECDatabase {
     pub data: ECData,
+    pub has_subbed: bool,
 }
 
 impl ECDatabase {
-    pub const SYSTEM_ID: SystemID = 0xbdbe41313b4c4600;
+    pub const TOPIC_ID: TopicID = 0xbdbe41313b4c4600;
     pub fn new() -> Box<Self> {
         Box::new(Default::default())
     }
 }
 
 impl System for ECDatabase {
-    fn get_system_id(&self) -> SystemID {
-        Self::SYSTEM_ID
-    }
-
     fn run(&mut self, inbox: &[Message]) -> Box<[Message]> {
         let mut outbox = Vec::new();
         for message in inbox {
-            if let Ok(ec_database_msg) = message.data.deserialize::<ECDatabaseMessage>() {
+            if let Ok(ec_database_msg) = message.data.as_type::<ECDatabaseMessage>() {
                 use crate::log_system::LogSystem;
                 outbox.push(
-                    Message::new(LogSystem::SYSTEM_ID, format!("{:?}", ec_database_msg)).unwrap(),
+                    Message::new(LogSystem::TOPIC_ID, format!("{:?}", ec_database_msg)).unwrap(),
                 );
             }
         }
+
+        if !self.has_subbed {
+            // Subscribe to our own topic
+            self.has_subbed = true;
+            outbox.push(Message::topic_sub(Self::TOPIC_ID))
+        }
+
         outbox.into_boxed_slice()
     }
 }
