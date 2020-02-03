@@ -1,5 +1,4 @@
-use crate::anonymous::*;
-use crate::common_types::{Message, System, TopicID};
+use hacktor_shared::{Message, System, TopicID, AnonymousData, HasTypeID};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

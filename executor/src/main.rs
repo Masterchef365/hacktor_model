@@ -1,6 +1,11 @@
-use hacktor::log_system::LogSystem;
-use hacktor::ec_database::{ECDatabase, ECDatabaseMessage};
-use hacktor::{Message, SystemManager};
+pub mod ec_database;
+mod system_manager;
+pub mod log_system;
+
+use crate::log_system::LogSystem;
+use crate::ec_database::{ECDatabase, ECDatabaseMessage};
+use crate::system_manager::SystemManager;
+use hacktor_shared::Message;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut manager = SystemManager::new();

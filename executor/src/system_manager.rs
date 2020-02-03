@@ -1,4 +1,4 @@
-use crate::common_types::{Message, System, TopicID, TopicSub};
+use hacktor_shared::{Message, System, TopicID, TopicSub};
 use std::collections::HashSet;
 
 pub struct SystemManager {
@@ -67,12 +67,5 @@ impl SystemManager {
                 managed.inbox_buffer.push(message.clone());
             }
         }
-    }
-}
-
-// TODO: This feels a little gross?
-impl Message {
-    pub fn topic_sub(topic_id: TopicID) -> Self {
-        Self::new(SystemManager::TOPIC_ID, TopicSub(topic_id)).unwrap()
     }
 }

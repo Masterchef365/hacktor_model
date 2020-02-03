@@ -1,4 +1,4 @@
-use crate::common_types::{Message, System, TopicID};
+use hacktor_shared::{Message, System, TopicID};
 
 /// Log message presentation System
 pub struct LogSystem {

@@ -16,6 +16,15 @@ pub struct Message {
     pub data: AnonymousData,
 }
 
+
+// TODO: This feels a little gross?
+impl Message {
+    pub fn topic_sub(topic_id: TopicID) -> Self {
+        const SYSTEM_MANAGER_TOPIC_ID: TopicID = 0xe2cb565b9147616c;
+        Self::new(SYSTEM_MANAGER_TOPIC_ID, TopicSub(topic_id)).unwrap()
+    }
+}
+
 impl Message {
     /// Construct a new Message with the specified data and destination.
     pub fn new<T: HasTypeID + Serialize>(

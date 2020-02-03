@@ -1,0 +1,9 @@
+[package]
+name = "hacktor-executor"
+version = "0.1.0"
+authors = ["Masterchef365 <duncan.freeman1@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+hacktor-shared = { path = "../shared" }
